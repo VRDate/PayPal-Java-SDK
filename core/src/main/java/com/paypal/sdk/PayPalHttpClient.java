@@ -39,7 +39,6 @@ public class PayPalHttpClient extends DefaultHttpClient implements HttpClient {
 	}
 
 	private void injectStandardHeaders(HttpRequest request) throws IOException {
-
 		if (request.requestBody() != null) {
 			request.headers().headerIfNotPresent(CONTENT_TYPE, "application/json");
 		}

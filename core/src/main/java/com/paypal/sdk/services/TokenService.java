@@ -2,7 +2,6 @@ package com.paypal.sdk.services;
 
 import com.paypal.sdk.HttpRequest;
 import com.paypal.sdk.HttpResponse;
-import com.paypal.sdk.codec.binary.Base64;
 import com.paypal.sdk.http.DefaultHttpClient;
 import com.paypal.sdk.http.Environment;
 import com.paypal.sdk.http.HttpClient;
@@ -10,6 +9,7 @@ import com.paypal.sdk.model.AccessToken;
 import com.paypal.sdk.model.RefreshToken;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,15 +55,14 @@ public class TokenService {
 	}
 
 	private <T> HttpRequest<T> getAccessTokenRequest(String baseUrl, String path, Class<T> returnTypeClass) throws IOException {
-		return new HttpRequest<T>(path, "POST", returnTypeClass)
+		return new HttpRequest<>(path, "POST", returnTypeClass)
 				.baseUrl(baseUrl)
 				.header(AUTHORIZATION, accessTokenRequestHeader())
 				.header(CONTENT_TYPE, "application/x-www-form-urlencoded");
 	}
 
 	private String accessTokenRequestHeader() throws IOException {
-		byte[] encoded;
-		encoded = Base64.encodeBase64((mEnvironment.getClientId() + ":" + mEnvironment.getClientSecret()).getBytes("UTF-8"));
+		byte[] encoded = Base64.getEncoder().encode((mEnvironment.getClientId() + ":" + mEnvironment.getClientSecret()).getBytes("UTF-8"));
 		return "Basic " + new String(encoded, "UTF-8");
 	}
 

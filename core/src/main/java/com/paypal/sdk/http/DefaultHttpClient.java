@@ -19,10 +19,10 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
-import static com.paypal.sdk.codec.CharEncoding.UTF_8;
 import static com.paypal.sdk.http.Headers.ACCEPT_LANGUAGE;
 import static com.paypal.sdk.http.Headers.USER_AGENT;
 import static java.net.HttpURLConnection.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class DefaultHttpClient implements HttpClient {
 
