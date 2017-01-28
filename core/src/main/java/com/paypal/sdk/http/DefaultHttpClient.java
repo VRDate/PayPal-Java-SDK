@@ -31,14 +31,14 @@ public class DefaultHttpClient implements HttpClient {
 	private int mConnectTimeout;
 	private int mReadTimeout;
 
-	protected List<Injector> mInjectors;
+	List<Injector> mInjectors;
 
 	public DefaultHttpClient() {
 		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
 		mConnectTimeout = mReadTimeout;
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
 		mInjectors = new ArrayList<>();
-		addInjector(new DefaultHeaderInjector());
+		addInjector(this::injectStandardHeaders);
 
 		try {
 			mSSLSocketFactory = new TLSSocketFactory();
@@ -206,13 +206,9 @@ public class DefaultHttpClient implements HttpClient {
 		}
 	}
 
-	private class DefaultHeaderInjector implements Injector {
-
-		@Override
-		public <T> void inject(HttpRequest<T> request) throws IOException {
-			request.headers()
-					.headerIfNotPresent(USER_AGENT, getUserAgent())
-					.headerIfNotPresent(ACCEPT_LANGUAGE, Locale.getDefault().getLanguage());
-		}
+	private void injectStandardHeaders(HttpRequest request) throws IOException {
+		request.headers()
+				.headerIfNotPresent(USER_AGENT, getUserAgent())
+				.headerIfNotPresent(ACCEPT_LANGUAGE, Locale.getDefault().getLanguage());
 	}
 }

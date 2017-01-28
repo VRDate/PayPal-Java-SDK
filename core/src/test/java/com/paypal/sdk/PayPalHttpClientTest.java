@@ -27,7 +27,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 	@Test
 	public void testPayPalHttpClient_execute_setsCommonHeaders() throws IOException {
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "POST", Void.class);
+		HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class);
 		stub(request, null);
 
 		client.execute(request);
@@ -36,7 +36,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 	@Test
 	public void testPayPalHttpClient_execute_setsContentTypeHeaderWhenRequestBodyPresent() throws IOException {
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "POST", Void.class);
+		HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class);
 		request.requestBody("{some json}");
 		stub(request, null);
 
@@ -47,7 +47,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 	@Test
 	public void testPayPalHttpClient_execute_setsBaseUrl() throws IOException {
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "POST", Void.class);
+		HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class);
 		stub(request, null);
 
 		client.execute(request);
@@ -58,7 +58,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 	@Test
 	public void testPayPalHttpClient_execute_signsRequest() throws IOException {
 		stubAccessTokenRequest(simpleAccessToken(), baseUrl());
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class)
+		HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class)
 				.oAuthScope("scope");
 
 		stub(request, null);
@@ -72,7 +72,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 	@Test
 	public void testPayPalHttpClient_execute_preparesRequest() throws IOException {
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
+		HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class);
 
 		stub(request, null);
 
@@ -84,18 +84,13 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 	@Test
 	public void testPayPalHttpClient_execute_withCustomInjector_signsRequest() throws IOException {
-		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
+		HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class);
 
 		stub(request, null);
 
-		Injector injector = new Injector() {
-			@Override
-			public <T> void inject(HttpRequest<T> request) throws IOException {
-				request.header("super-header-key", "super-header-value");
-			}
-		};
-
-		PayPalHttpClient client = new PayPalHttpClient(injector, environment);
+		PayPalHttpClient client = new PayPalHttpClient(environment, (r -> {
+			r.header("super-header-key", "super-header-value");
+		}));
 		client.execute(request);
 
 		verify(getRequestedFor(urlEqualTo("/"))

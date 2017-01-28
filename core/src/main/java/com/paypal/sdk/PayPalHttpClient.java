@@ -16,14 +16,15 @@ public class PayPalHttpClient extends DefaultHttpClient implements HttpClient {
     private Environment mEnvironment;
 
     public PayPalHttpClient(Environment environment) {
-    	this(new OAuthInjector(environment), environment);
+    	this(environment, new OAuthInjector(environment));
     }
 
-    public PayPalHttpClient(Injector authInjector, Environment environment) {
+    public PayPalHttpClient(Environment environment, Injector authInjector) {
     	super();
 		mEnvironment = environment;
     	addInjector(authInjector);
-    	addInjector(new PayPalDefaultInjector());
+    	addInjector(this::injectBaseUrl);
+		addInjector(this::injectStandardHeaders);
 	}
 
 	@Override
@@ -31,20 +32,18 @@ public class PayPalHttpClient extends DefaultHttpClient implements HttpClient {
     	return "Java PayPalHttpClient"; // TODO: Return SDK version as part of this user agent.
 	}
 
-	private class PayPalDefaultInjector implements Injector {
-
-		@Override
-		public <T> void inject(HttpRequest<T> request) throws IOException {
-			if (request.baseUrl() == null) {
-				request.baseUrl(mEnvironment.baseUrl());
-			}
-
-			if (request.requestBody() != null) {
-				request.headers().headerIfNotPresent(CONTENT_TYPE, "application/json");
-			}
-
-			request.headers().headerIfNotPresent(ACCEPT_ENCODING, "gzip");
-
+	private void injectBaseUrl(HttpRequest request) throws IOException {
+		if (request.baseUrl() == null) {
+			request.baseUrl(mEnvironment.baseUrl());
 		}
+	}
+
+	private void injectStandardHeaders(HttpRequest request) throws IOException {
+
+		if (request.requestBody() != null) {
+			request.headers().headerIfNotPresent(CONTENT_TYPE, "application/json");
+		}
+
+		request.headers().headerIfNotPresent(ACCEPT_ENCODING, "gzip");
 	}
 }
