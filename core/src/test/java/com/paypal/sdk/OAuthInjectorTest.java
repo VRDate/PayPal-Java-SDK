@@ -1,6 +1,5 @@
 package com.paypal.sdk;
 
-import com.paypal.sdk.http.Environment;
 import com.paypal.sdk.http.utils.WireMockHarness;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -8,14 +7,9 @@ import org.testng.annotations.Test;
 import java.io.IOException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.paypal.sdk.http.utils.StubUtils.simpleAccessToken;
-import static com.paypal.sdk.http.utils.StubUtils.stubAccessTokenRequest;
-import static com.paypal.sdk.http.utils.StubUtils.stubAccessTokenWithRefreshTokenRequest;
 import static org.testng.AssertJUnit.assertEquals;
 
 public class OAuthInjectorTest extends WireMockHarness {
-
-	private Environment environment = new Environment.Development("clientId", "clientSecret", baseUrl());
 
 	@BeforeMethod
 	public void setup() {
@@ -24,8 +18,8 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void OAuthInjector_clientId_inject_fetchesAccessTokenIfNotCached() throws IOException {
-		OAuthInjector injector = new OAuthInjector(environment);
-		stubAccessTokenRequest(simpleAccessToken(), baseUrl());
+		OAuthInjector injector = new OAuthInjector(environment());
+		stubAccessTokenRequest(simpleAccessToken());
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
 		injector.inject(request);
@@ -35,9 +29,9 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void testOAuthInjector_clientId_inject_fetchesAccessTokenIfExpired() throws InterruptedException, IOException {
-		OAuthInjector injector = new OAuthInjector(environment);
+		OAuthInjector injector = new OAuthInjector(environment());
 		injector.mAccessToken = simpleAccessToken().expiresIn(0);
-		stubAccessTokenRequest(simpleAccessToken(), baseUrl());
+		stubAccessTokenRequest(simpleAccessToken());
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
 		injector.inject(request);
@@ -47,7 +41,7 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void testOAuthInjector_clientId_inject_setsAuthorizationHeader() throws IOException {
-		OAuthInjector injector = new OAuthInjector(environment);
+		OAuthInjector injector = new OAuthInjector(environment());
 		injector.mAccessToken = simpleAccessToken();
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
@@ -59,8 +53,8 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void testOAuthInjector_refreshToken_fetchesAccessTokenIfNotCached() throws IOException {
-		OAuthInjector injector = new OAuthInjector(environment,"refresh-token");
-		stubAccessTokenWithRefreshTokenRequest(simpleAccessToken(), baseUrl());
+		OAuthInjector injector = new OAuthInjector(environment(),"refresh-token");
+		stubAccessTokenWithRefreshTokenRequest(simpleAccessToken());
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
 		injector.inject(request);
@@ -70,9 +64,9 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void testOAuthInjector_refreshToken_fetchesAccessTokenIfExpired() throws IOException {
-		OAuthInjector injector = new OAuthInjector(environment, "refresh-token");
+		OAuthInjector injector = new OAuthInjector(environment(), "refresh-token");
 		injector.mAccessToken = simpleAccessToken().expiresIn(0);
-		stubAccessTokenWithRefreshTokenRequest(simpleAccessToken(), baseUrl());
+		stubAccessTokenWithRefreshTokenRequest(simpleAccessToken());
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);
 		injector.inject(request);
@@ -82,7 +76,7 @@ public class OAuthInjectorTest extends WireMockHarness {
 
 	@Test
 	public void testOAuthInjector_refreshToken_inject_setsAuthorizationHeader() throws IOException {
-		OAuthInjector injector = new OAuthInjector(environment,"refresh-token");
+		OAuthInjector injector = new OAuthInjector(environment(),"refresh-token");
 		injector.mAccessToken = simpleAccessToken();
 
 		HttpRequest<Void> request = new HttpRequest<Void>("/", "GET", Void.class);

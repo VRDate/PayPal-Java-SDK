@@ -14,8 +14,8 @@ public abstract class Environment {
 	private String clientSecret;
 
 	public Environment(String clientId, String clientSecret) {
-		clientId = clientId;
-		clientSecret = clientSecret;
+		this.clientId = clientId;
+		this.clientSecret = clientSecret;
 	}
 
     public abstract String baseUrl();
@@ -41,21 +41,6 @@ public abstract class Environment {
 		@Override
 		public String baseUrl() {
 			return "https://api.sandbox.paypal.com";
-		}
-	}
-
-	public static class Development extends Environment {
-
-    	public Development(String clientId, String clientSecret, String baseUrl) {
-			super(clientId, clientSecret);
-			mBaseUrl = baseUrl;
-		}
-
-    	private String mBaseUrl;
-
-    	@Override
-		public String baseUrl() {
-			return mBaseUrl;
 		}
 	}
 }

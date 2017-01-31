@@ -26,7 +26,6 @@ import java.util.Locale;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.*;
 import static com.paypal.sdk.http.Headers.*;
-import static com.paypal.sdk.http.utils.StubUtils.stub;
 import static java.net.HttpURLConnection.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -47,7 +46,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test(dataProvider = "getErrorCodesWithException")
     public void testHttpClient_execute_throwsProperException(final int statusCode, final Class expectedExceptionClass) throws IOException, IllegalAccessException, InstantiationException {
-        HttpRequest<String> request = new HttpRequest<>("/", "POST", String.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpResponse expectedResponse = HttpResponse.builder().statusCode(statusCode).build();
 
         stub(request, expectedResponse);
@@ -62,7 +61,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test(dataProvider = "getSuccessCode")
     public void testHttpClient_execute_returnsSuccess(final int statusCode) throws IOException {
-        HttpRequest<String> request = new HttpRequest<>("/", "POST", String.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpResponse<String> expectedResponse = HttpResponse.<String>builder()
                 .statusCode(statusCode)
                 .build();
@@ -76,7 +75,8 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test(dataProvider = "getVerbs")
     public void testHttpClient_execute_setsVerbFromRequest(RequestMethod requestMethod) throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", requestMethod.getName(), Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest()
+				.verb(requestMethod.getName());
         stub(request, null);
 
         client.execute(request);
@@ -85,7 +85,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_new_setsDefaultValues() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         stub(request, null);
 
         client.execute(request);
@@ -97,7 +97,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
     @Test
     public void testHttpClient_setUserAgent_setsUserAgentInRequest() throws IOException {
         client.setUserAgent("Test User Agent");
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         stub(request, null);
 
         client.execute(request);
@@ -118,10 +118,10 @@ public class DefaultHttpClientTest extends WireMockHarness {
     @Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "SSLSocketFactory was not set or failed to initialize")
     public void testHttpClient_execute_postsErrorForHttpsRequestsWhenSSLSocketFactoryIsNull()
             throws InterruptedException, IOException {
-
         client.setSSLSocketFactory(null);
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class)
-				.baseUrl(new Environment.Sandbox("clientId", "clientSecret").baseUrl());
+
+        HttpRequest<String> request = simpleRequest()
+				.baseUrl("https://example.com");
 
 		client.execute(request);
     }
@@ -131,8 +131,8 @@ public class DefaultHttpClientTest extends WireMockHarness {
         SSLSocketFactory sslSocketFactory = mock(SSLSocketFactory.class);
 		client.setSSLSocketFactory(sslSocketFactory);
 
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class)
-				.baseUrl(new Environment.Sandbox("clientId", "clientSecret").baseUrl());
+        HttpRequest<String> request = simpleRequest()
+				.baseUrl("https://example.com");
         HttpURLConnection connection = client.getConnection(request);
 
         assertEquals(sslSocketFactory, ((HttpsURLConnection) connection).getSSLSocketFactory());
@@ -140,7 +140,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_getConnection_doesNotUseSSLSocketFactoryForNonHttpsRequests() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
 
         assertFalse(connection instanceof HttpsURLConnection);
@@ -150,7 +150,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
     public void testHttpClient_getConnection_usesRequestHeaderValueOverItsOwn() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
 		client.setUserAgent("Client User Agent");
 
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         request.headers().header(USER_AGENT, "Request User Agent");
 
         HttpURLConnection connection = client.getConnection(request);
@@ -160,7 +160,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_getConnection_returnsNullIfNoContentTypeSet() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
 
         assertNull(connection.getRequestProperty(CONTENT_TYPE.toString()));
@@ -168,7 +168,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_getConnection_setsDefaultConnectTimeoutWhenNoTimeoutIsSet() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
 
         assertEquals(30000, connection.getConnectTimeout());
@@ -178,14 +178,14 @@ public class DefaultHttpClientTest extends WireMockHarness {
     public void testHttpClient_getConnection_setsConnectTimeout() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 		client.setConnectTimeout(50000);
 
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
         assertEquals(50000, connection.getConnectTimeout());
     }
 
     @Test
     public void testHttpClient_getConnection_setsDefaultReadTimeoutWhenNoTimeoutIsSet() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
 
         assertEquals(30000, connection.getReadTimeout());
@@ -195,7 +195,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
     public void testHttpClient_getConnection_setsReadTimeoutWhenTimeoutIsSet() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 		client.setReadTimeout(50000);
 
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection( request);
 
         assertEquals(50000, connection.getReadTimeout());
@@ -203,15 +203,13 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_execute_setsHeadersFromRequest() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class).baseUrl(baseUrl());
-        request.headers()
+        HttpRequest<String> request = simpleRequest()
                 .header("Key1", "Value1")
 				.header(CONTENT_TYPE, "application/xml");
 
         stub(request, null);
 
         client.execute(request);
-
         verify(getRequestedFor(urlEqualTo("/"))
                 .withHeader("Key1", equalTo("Value1"))
                 .withHeader("Content-Type", equalTo("application/xml")));
@@ -219,9 +217,11 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_execute_writesDataFromRequestIfPresent() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class)
-                .requestBody("some data").baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest()
+				.verb("POST")
+                .requestBody("some data");
         stub(request, null);
+
         client.execute(request);
         verify(postRequestedFor(urlEqualTo("/"))
                 .withRequestBody(equalTo("some data")));
@@ -229,8 +229,10 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testHttpClient_execute_doesNotwriteDataFromRequestIfNotPresent() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest()
+				.verb("POST");
         stub(request, null);
+
         client.execute(request);
         verify(postRequestedFor(urlEqualTo("/"))
                 .withRequestBody(equalTo("")));
@@ -238,19 +240,17 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
 	public void testDefaultHttpClient_execute_setsCommonHeaders() throws IOException {
-	    HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class).baseUrl(baseUrl());
+	    HttpRequest<String> request = simpleRequest();
 		stub(request, null);
 
 	    client.execute(request);
-
         assertEquals(request.headers().header(USER_AGENT), "Java HTTP/1.1");
         assertEquals(request.headers().header(ACCEPT_LANGUAGE), Locale.getDefault().getLanguage());
     }
 
     @Test
     public void testDefaultHttpClient_execute_doesNotSetCommonHeadersIfPresent() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class)
-                .baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         request.header(USER_AGENT, "Custom User Agent");
         request.header(ACCEPT_LANGUAGE, "custom");
 
@@ -268,7 +268,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 			request.header(PAYPAL_REQUEST_ID, "request-id");
 		});
 
-		HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class).baseUrl(baseUrl());
+		HttpRequest<String> request = simpleRequest();
 		stub(request, null);
 
 		client.execute(request);
@@ -284,7 +284,7 @@ public class DefaultHttpClientTest extends WireMockHarness {
 
     @Test
     public void testDefaultHttpClient_applyHeadersFromRequest_SetsHeaders() throws IOException {
-        HttpRequest<Void> request = new HttpRequest<>("/", "POST", Void.class).baseUrl(baseUrl());
+        HttpRequest<String> request = simpleRequest();
         request.header(USER_AGENT, "Custom User Agent");
         HttpURLConnection connection = (HttpURLConnection) new URL(request.url()).openConnection();
 
@@ -341,4 +341,8 @@ public class DefaultHttpClientTest extends WireMockHarness {
         };
     }
 
+    private HttpRequest<String> simpleRequest() {
+    	return new HttpRequest<>("/", "GET", String.class)
+				.baseUrl(environment().baseUrl());
+	}
 }

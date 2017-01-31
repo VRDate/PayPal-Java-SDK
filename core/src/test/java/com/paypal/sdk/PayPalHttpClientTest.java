@@ -1,6 +1,5 @@
 package com.paypal.sdk;
 
-import com.paypal.sdk.http.Environment;
 import com.paypal.sdk.http.utils.WireMockHarness;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -10,19 +9,17 @@ import java.util.Locale;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.paypal.sdk.http.Headers.*;
-import static com.paypal.sdk.http.utils.StubUtils.*;
 import static org.testng.Assert.assertEquals;
 
 public class PayPalHttpClientTest extends WireMockHarness {
 
 	private PayPalHttpClient client = null;
-	private Environment environment = new Environment.Development("clientId", "clientSecret", baseUrl());
 
 	@BeforeMethod
 	public void setup() {
 		super.setup();
-		client = new PayPalHttpClient(environment);
-		stubAccessTokenRequest(simpleAccessToken(), baseUrl());
+		client = new PayPalHttpClient(environment());
+		stubAccessTokenRequest(simpleAccessToken());
 	}
 
 	@Test
@@ -52,12 +49,12 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 		client.execute(request);
 
-		assertEquals(baseUrl() + "/", request.url());
+		assertEquals(environment().baseUrl() + "/", request.url());
 	}
 
 	@Test
 	public void testPayPalHttpClient_execute_signsRequest() throws IOException {
-		stubAccessTokenRequest(simpleAccessToken(), baseUrl());
+		stubAccessTokenRequest(simpleAccessToken());
 		HttpRequest<Void> request = new HttpRequest<>("/", "GET", Void.class)
 				.oAuthScope("scope");
 
@@ -88,7 +85,7 @@ public class PayPalHttpClientTest extends WireMockHarness {
 
 		stub(request, null);
 
-		PayPalHttpClient client = new PayPalHttpClient(environment, (r -> {
+		PayPalHttpClient client = new PayPalHttpClient(environment(), (r -> {
 			r.header("super-header-key", "super-header-value");
 		}));
 		client.execute(request);
